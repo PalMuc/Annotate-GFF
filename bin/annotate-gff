@@ -17,7 +17,6 @@ def get_blast_annotations(xml_reader)
 		if elem.name == "Iteration_query-def"&& elem.node_type == Nokogiri::XML::Node::ELEMENT_NODE
 			#We are at the beginning of an iteration
 			current_query = elem.inner_xml
-			#query_hit_map[current_query] = []
 		elsif elem.name == "Hit" && elem.node_type == Nokogiri::XML::Node::ELEMENT_NODE
 			#We are at the beginning of a Hit
 			#Load the node representing this hit into memory and extract required information
@@ -113,7 +112,7 @@ def blast_result_to_GFF_records(hits_reader, blast_annotations)
 			#We've got a new query sequence
 
 			#Check if we found any results for the old query sequence
-			#Write a dummy anntation for the old query seq if neccessary
+			#Write a dummy annotation for the old query seq if neccessary
 			if gff_records.has_key? current_query_name
 				if gff_records[current_query_name].empty?
 					dummy_feature_attributes = []
@@ -122,7 +121,7 @@ def blast_result_to_GFF_records(hits_reader, blast_annotations)
 					gff_records[current_query_name] << new_record
 				end
 			else
-				#puts "This must be the first query sequence"
+				#This must be the first query sequence
 			end
       
       #Set the new query sequence
