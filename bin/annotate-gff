@@ -1,8 +1,4 @@
 #!/usr/bin/env ruby
+require 'shellwords'
 command = File.join(File.dirname(__FILE__), '..', 'lib/run.sh').to_s
-params = ""
-ARGV.each do |c|
-  params << " " << c
-end
-
-exec("sh "  + command + params)
+exec("sh "  + command + " " + Shellwords.shelljoin(ARGV))
