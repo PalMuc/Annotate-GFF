@@ -127,6 +127,7 @@ def blast_result_to_GFF_records(hits_reader, blast_annotations)
       #Set the new query sequence
       unescaped_query_name = elem.inner_xml
 			current_query_name = URI.escape(unescaped_query_name, forbidden_characters + unescaped_query_name.gsub(allowed_in_seqids, "") + ">")
+      puts current_query_name
 
 			if gff_records.has_key? current_query_name
 				abort "Multiple iterations"
