@@ -44,7 +44,7 @@ def blast_result_to_GFF_records(hits_reader, blast_annotations)
 	blast_output_db = ""
 
 	current_iteration = 0
-	current_query_name = ""
+	current_query_name = nil
 	current_query_length = 0
 	current_hit_def = ""
 	current_hit_name = nil
@@ -125,7 +125,8 @@ def blast_result_to_GFF_records(hits_reader, blast_annotations)
 			end
       
       #Set the new query sequence
-			current_query_name = URI.escape(elem.inner_xml, forbidden_characters + current_query_name.gsub(allowed_in_seqids, "") + ">")
+      unescaped_query_name = elem.inner_xml
+			current_query_name = URI.escape(unescaped_query_name, forbidden_characters + unescaped_query_name.gsub(allowed_in_seqids, "") + ">")
 
 			if gff_records.has_key? current_query_name
 				abort "Multiple iterations"
