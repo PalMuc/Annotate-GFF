@@ -10,13 +10,22 @@ require 'nokogiri'
 def get_blast_annotations(xml_reader)
 
 	query_hit_map = {}
-	current_query = ""
+	current_query = nil
+  current_name = nil
+  name_species_regexp = /(.*)\s\[(.*)\].*/
 
 	#Go through the XML with a pull-parser
 	xml_reader.each do |elem|
 		if elem.name == "Iteration_query-def"&& elem.node_type == Nokogiri::XML::Node::ELEMENT_NODE
 			#We are at the beginning of an iteration
 			current_query = elem.inner_xml
+      regexp_match = name_species_regexp.match(current_hit_def)
+      unless regexp_match.nil?
+        current_name = regexp_match[1]
+      else
+        current_name = current_query
+      end
+      
 		elsif elem.name == "Hit" && elem.node_type == Nokogiri::XML::Node::ELEMENT_NODE
 			#We are at the beginning of a Hit
 			#Load the node representing this hit into memory and extract required information
@@ -27,8 +36,8 @@ def get_blast_annotations(xml_reader)
 			lowest_evalue_so_far = 9999 #This value does not matter because it will always be set with the evalue of the first hit
 			
 			#Make sure this map only contains the hits with the lowest evalue
-			if !(query_hit_map.has_key? current_query) || (lowest_evalue_so_far > hsp_evalue)
-				query_hit_map[current_query] = hit_def
+			if !(query_hit_map.has_key? current_name) || (lowest_evalue_so_far > hsp_evalue)
+				query_hit_map[current_name] = hit_def
 				lowest_evalue_so_far = hsp_evalue
 			end
 		end
@@ -93,6 +102,7 @@ def blast_result_to_GFF_records(hits_reader, blast_annotations)
 			#We are at the beginning of a Hit
 			current_hit_def = elem.inner_xml
 			regexp_match = name_species_regexp.match(current_hit_def)
+      
 			unless regexp_match.nil?
 				current_hit_name = URI.escape(regexp_match[1], forbidden_characters)
 				current_hit_alias = URI.escape(regexp_match[2], forbidden_characters)
@@ -102,8 +112,9 @@ def blast_result_to_GFF_records(hits_reader, blast_annotations)
 			end
 
 			#Get annotations from BLAST hits
-			if blast_annotations.has_key? current_hit_def
-				current_hit_annotation = URI.escape(blast_annotations[current_hit_def], forbidden_characters)
+      search_result = blast_annotations[search_term]
+			unless search_result.nil?
+				current_hit_annotation = URI.escape(search_result, forbidden_characters)
 			else
 				current_hit_annotation = nil
 			end
