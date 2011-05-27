@@ -19,7 +19,7 @@ def get_blast_annotations(xml_reader)
 		if elem.name == "Iteration_query-def"&& elem.node_type == Nokogiri::XML::Node::ELEMENT_NODE
 			#We are at the beginning of an iteration
 			current_query = elem.inner_xml
-      regexp_match = name_species_regexp.match(current_hit_def)
+      regexp_match = name_species_regexp.match(current_query)
       unless regexp_match.nil?
         current_name = regexp_match[1]
       else
