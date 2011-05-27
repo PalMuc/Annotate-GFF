@@ -112,7 +112,7 @@ def blast_result_to_GFF_records(hits_reader, blast_annotations)
 			end
 
 			#Get annotations from BLAST hits
-      search_result = blast_annotations[search_term]
+      search_result = blast_annotations[current_hit_name]
 			unless search_result.nil?
 				current_hit_annotation = URI.escape(search_result, forbidden_characters)
 			else
