@@ -1,3 +1,8 @@
 #!/usr/bin/env ruby
 command = File.join(File.dirname(__FILE__), '..', 'lib/run.sh').to_s
-exec("sh "  + command)
+params = ""
+ARGV.each do |c|
+  params << " " << c
+end
+
+exec("sh "  + command + params)
