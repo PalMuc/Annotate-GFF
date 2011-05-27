@@ -2,7 +2,6 @@
 
 require 'rubygems'
 require 'uri'
-require'java'
 
 require 'trollop'
 require 'bio'
@@ -164,6 +163,13 @@ def blast_result_to_GFF_records(hits_reader, blast_annotations)
 
 	return gff_records.values.flatten
 
+end
+
+if RUBY_PLATFORM =~ /java/
+  require 'java'
+  java_import java.lang.Runtime
+  puts "You are running JRuby"
+  puts "Max heap memory is: " + (Runtime.get_runtime.maxMemory()/(1024*1024)).to_s
 end
 
 opts = Trollop::options do
