@@ -24,6 +24,9 @@ Annotate-GFF takes the following parameters:
        --annotation-xml, -a <s>:   Blast XML output for annotations
                      --help, -h:   Show a help message
                      
+Of those parameters, --annotation-xml is optional. If this parameter
+is not parsed, no functional annotation will be added to the new GFF records.                
+                     
 ## Walkthrough
 Let's assume you want to map EST reads of *Ephydatia muelleri* onto
 genome scaffolds of *Amphimedon queenslandica*.
