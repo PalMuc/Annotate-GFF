@@ -25,7 +25,7 @@ Annotate-GFF takes the following parameters:
                      --help, -h:   Show a help message
                      
 Of those parameters, --annotation-xml is optional. If this parameter
-is not parsed, no functional annotation will be added to the new GFF records.                
+is not passed no functional annotation will be added to the new GFF records.                
                      
 ## Walkthrough
 Let's assume you want to map EST reads of *Ephydatia muelleri* onto
