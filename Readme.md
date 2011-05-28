@@ -32,7 +32,7 @@ that are stored in GFF format.
 
 If you want functional annotations for the EST reads you must first
 blast all *Ephydatia muelleri* reads against NCBI nr. Instructions on
-how to scquire this database can be found
+how to acquire this database can be found
 [here](http://www.ncbi.nlm.nih.gov/staff/tao/URLAPI/blastdb.html). An
 example BLAST command could be:
 
