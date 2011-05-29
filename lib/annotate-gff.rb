@@ -46,7 +46,7 @@ def get_blast_annotations(xml_reader)
 	return query_hit_map
 end
 
-def blast_result_to_GFF_records(hits_reader, blast_annotations)
+def blast_result_to_GFF_records(hits_reader, blast_annotations, arg_species_name)
 	raise ArgumentError unless hits_reader.is_a? Nokogiri::XML::Reader
 	
 	blast_output_version = ""
@@ -61,6 +61,7 @@ def blast_result_to_GFF_records(hits_reader, blast_annotations)
 	current_hit_annotation = nil
 
 	feature_type = "EST_match"
+  
 	name_species_regexp = /(.*)\s\[(.*)\].*/
 
 	gff_records = {}
@@ -68,6 +69,13 @@ def blast_result_to_GFF_records(hits_reader, blast_annotations)
 	forbidden_characters = ",=;%&\t"
 	allowed_in_seqids = /[a-zA-Z0-9.:^*$@!+_?-|]/
 
+  species_name = nil
+
+  unless arg_species_name.nil?
+    species_name = URI.escape(arg_species_name, forbidden_characters)
+  end
+  
+  
 	#Go through the XML with a pull-parser
 	hits_reader.each do |elem|
 
@@ -108,7 +116,7 @@ def blast_result_to_GFF_records(hits_reader, blast_annotations)
 				current_hit_alias = URI.escape(regexp_match[2], forbidden_characters)
 			else
 				current_hit_name = URI.escape(current_hit_def, forbidden_characters)
-				current_hit_alias = nil
+				current_hit_alias = species_name
 			end
 
 			#Get annotations from BLAST hits
@@ -169,13 +177,22 @@ if RUBY_PLATFORM =~ /java/
   require 'java'
   java_import java.lang.Runtime
   puts "You are running JRuby"
-  puts "Max heap memory is: " + (Runtime.get_runtime.maxMemory()/(1024*1024)).to_s
+  max_heap_memory = Runtime.get_runtime.maxMemory()/(1024*1024)
+  
+  if maxMemory < 2043
+    puts "WARNING: max heap memory is: " + (Runtime.get_runtime.maxMemory()/(1024*1024)).to_s
+    puts "This might not be enough for large files."
+    puts "If this program crashes due to lack of memory,"
+    puts "you can increase th maximum heap memory by calling: "
+    puts "export JRUBY_OPTS=\"-J-Xmx2G\""
+    puts "before you run annotate-gff."
 end
 
 opts = Trollop::options do
   opt :input_gff, "Input GFF file", :type => String
   opt :output_gff, "Output GFF file", :type => String
   opt :blast_xml, "Blast XML output", :type => String
+  opt :species_name, "Species name to use if no species name is found in the hit definition", :type => String
   opt :annotation_xml, "Blast XML output for annotations", :type => String
 end
 
@@ -205,9 +222,19 @@ end
   end
 end
 
+if opts[:species_name_given]
+  puts "If hit definitions do not contain a species name in square brackets use: " + opts[:species_name]
+else
+  puts "WARNING: No default species name given."
+  puts "If hit definitions do not contain the species name in angled brackets, no species name will be written!"
+  puts "Please consider setting a default species name using the parameter -s"
+end
+
 puts "GFF file at " + input_gff
 puts "Annotated GFF file will be written to " + output_gff
 puts "XML BLAST output for the placement of ESTs at " + blast_xml
+
+
 puts "XML BLAST output for the automatic annotation of EST hits at: " + annotation_xml if opts[:annotation_xml_given]
 
 #Open the annotations file
@@ -223,12 +250,20 @@ if opts[:annotation_xml_given]
 end
 
 #Open the BLAST XML search hits
+if opts[:species_name_given]
+  species_name = opts[:species_name]
+else
+  species_name = nil
+end
+
 puts "Reading "+ blast_xml
 hits_reader = Nokogiri::XML::Reader(File.new(blast_xml))
 
 #Turn BLAST hits into GFF records and add them to the file
-new_annotations = blast_result_to_GFF_records(hits_reader, blast_annotations)
+new_annotations = blast_result_to_GFF_records(hits_reader, blast_annotations, species_name)
 gfffile.records.concat(new_annotations)
+
+
 
 gff_out = File.open(output_gff, "w")
 gff_out.write(gfffile)
