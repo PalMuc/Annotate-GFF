@@ -233,8 +233,6 @@ end
 puts "GFF file at " + input_gff
 puts "Annotated GFF file will be written to " + output_gff
 puts "XML BLAST output for the placement of ESTs at " + blast_xml
-
-
 puts "XML BLAST output for the automatic annotation of EST hits at: " + annotation_xml if opts[:annotation_xml_given]
 
 #Open the annotations file
@@ -262,8 +260,6 @@ hits_reader = Nokogiri::XML::Reader(File.new(blast_xml))
 #Turn BLAST hits into GFF records and add them to the file
 new_annotations = blast_result_to_GFF_records(hits_reader, blast_annotations, species_name)
 gfffile.records.concat(new_annotations)
-
-
 
 gff_out = File.open(output_gff, "w")
 gff_out.write(gfffile)
