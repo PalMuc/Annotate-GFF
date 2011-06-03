@@ -14,6 +14,11 @@ provide functional annotations for the search hits to be added to the
 GFF file. For that purpose it is advisable to blast against a peptide
 sequence database like
 [NCBI nr](http://www.ncbi.nlm.nih.gov/blast/blast_databases.shtml)
+Another optional parameter is the default species name for
+annotations. When the hit definition of a BLAST hit does not follow
+the convention: Sequence\_name [Species\_name] no sequence name for
+that hit can be determined. In this case, the default sequence name
+will be used. If none is set, the corresponding field will be left empty.
 
 ## Usage
 Annotate-GFF takes the following parameters:
@@ -21,6 +26,7 @@ Annotate-GFF takes the following parameters:
             --input-gff, -i <s>:   Input GFF file
            --output-gff, -o <s>:   Output GFF file
             --blast-xml, -b <s>:   Blast XML output
+         --species-name, -s <s>:   Species name to use if no species name is found in the hit definition
        --annotation-xml, -a <s>:   Blast XML output for annotations
                      --help, -h:   Show a help message
                      
@@ -51,9 +57,15 @@ constructing GFF records:
 
     tblastx -db ephydatia.fasta -query amphimedon.fasta -lcase_masking -evalue 0.0001 -outfmt 5 -out ephydatia.xml
 
-You now have all the input files you need to run Annotate-GFF.
+You now have all the input files you need to run Annotate-GFF. Your
+BLAST database might contain sequences that are not named like
+Sequence\_name [Species\_name]. In this case, no species name can be
+determined automatically. If you want to set a default species name in
+this case, you have to use the parameter -s. Make sure this name is
+identical to the one used by most sequences in your BLAST database.
 
-    annotate-gff -i amphimedon.gff -o amphimedon_with_ephydatia.gff -b ephydatia.xml -a ephydatia_annotations.xml
+    annotate-gff -i amphimedon.gff -o amphimedon_with_ephydatia.gff -b
+    ephydatia.xml -a ephydatia_annotations.xml -s "Ephydatia_muelleri"
 
 This will produce a new GFF file called amphimedon_with_ephydatia.gff
 that contains the mapping of *Ephydatia muelleri* onto the genome
