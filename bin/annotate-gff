@@ -179,15 +179,15 @@ if RUBY_PLATFORM =~ /java/
   puts "You are running JRuby"
   max_heap_memory = Runtime.get_runtime.maxMemory()/(1024*1024)
   
-  if maxMemory < 2043
-    puts "WARNING: max heap memory is: " + (Runtime.get_runtime.maxMemory()/(1024*1024)).to_s
+  if max_heap_memory < 2043
+    puts "WARNING: max heap memory is: " + max_heap_memory.to_s + "MB"
     puts "This might not be enough for large files."
     puts "If this program crashes due to lack of memory,"
-    puts "you can increase th maximum heap memory by calling: "
+    puts "you can increase th maximum heap memory to 2GB by calling: "
     puts "export JRUBY_OPTS=\"-J-Xmx2G\""
     puts "before you run annotate-gff."
+  end
 end
-
 opts = Trollop::options do
   opt :input_gff, "Input GFF file", :type => String
   opt :output_gff, "Output GFF file", :type => String
