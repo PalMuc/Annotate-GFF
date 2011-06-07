@@ -2,6 +2,7 @@
 
 require 'rubygems'
 require 'uri'
+require 'fileutils'
 
 require 'trollop'
 require 'bio'
@@ -129,21 +130,6 @@ def blast_result_to_GFF_records(hits_reader, blast_annotations, arg_species_name
       
     elsif elem.name == "Iteration_query-def" && elem.node_type == Nokogiri::XML::Node::ELEMENT_NODE
       #We've got a new query sequence
-
-      #Check if we found any results for the old query sequence
-      #Write a dummy annotation for the old query seq if neccessary
-      if gff_records.has_key? current_query_name
-        if gff_records[current_query_name].empty?
-          dummy_feature_attributes = []
-          dummy_feature_attributes << ["Note", "No hits for " + URI.escape(blast_output_db, forbidden_characters)]
-          new_record = Bio::GFF::GFF3::Record.new(current_query_name, nil, "remark", 1.to_s, current_query_length, nil, nil, nil, dummy_feature_attributes)
-          gff_records[current_query_name] << new_record
-        end
-      else
-        #This must be the first query sequence
-      end
-      
-      #Set the new query sequence
       unescaped_query_name = elem.inner_xml
       current_query_name = URI.escape(unescaped_query_name, forbidden_characters + unescaped_query_name.gsub(allowed_in_seqids, "") + ">")
       #puts current_query_name
@@ -155,12 +141,19 @@ def blast_result_to_GFF_records(hits_reader, blast_annotations, arg_species_name
       end
 
     elsif elem.name == "Iteration_query-len" && elem.node_type == Nokogiri::XML::Node::ELEMENT_NODE
-      current_query_length = elem.inner_xml.to_i			
-
+      current_query_length = elem.inner_xml.to_i
+    elsif elem.name == "Iteration_message" && elem.node_type == Nokogiri::XML::Node::ELEMENT_NODE
+      if elem.inner_xml == "No hits found"
+        #We did not find any results for the old query sequence
+        #Write a dummy annotation
+        dummy_feature_attributes = []
+        dummy_feature_attributes << ["Note", "No hits for " + URI.escape(blast_output_db, forbidden_characters)]
+        new_record = Bio::GFF::GFF3::Record.new(current_query_name, nil, "remark", 1.to_s, current_query_length, nil, nil, nil, dummy_feature_attributes)
+        gff_records[current_query_name] << new_record
+      end
     elsif elem.name == "BlastOutput_version" && elem.node_type == Nokogiri::XML::Node::ELEMENT_NODE
       #Get what version of BLAST was used
       blast_output_version = URI.escape(elem.inner_xml, forbidden_characters)
-      
     elsif elem.name == "BlastOutput_db" && elem.node_type == Nokogiri::XML::Node::ELEMENT_NODE
       #Get the path of the database
       blast_output_db = URI.escape(elem.inner_xml, forbidden_characters)
@@ -252,7 +245,9 @@ end
 
 blast_xml_files = Dir.glob(blast_xml_folder + "/*.xml")
 
-annotations = []
+#Prepare the output file
+FileUtils.cp(input_gff, output_gff)
+gff_out = File.open(output_gff, "a")
 
 #Open the BLAST XML search hits
 blast_xml_files.each do |blast_xml|
@@ -261,20 +256,14 @@ blast_xml_files.each do |blast_xml|
 
   #Turn BLAST hits into GFF records and add them to the file
   new_annotations = blast_result_to_GFF_records(hits_reader, blast_annotations, species_name)
-  annotations.concat(new_annotations)
+
+  new_annotations.each do |annotation|
+    #TODO this will produce garbage if the GFF file contains a ##FASTA line
+    gff_out.write(annotation.to_s)
+  end
+  
 end
 
-#Make life easier for the garbage collection
-blast_xml_files = nil
-blast_annotations = nil
-
-#Open the annotations file
-puts "Parsing " + input_gff
-gfffile = Bio::GFF::GFF3.new(File.new(input_gff))
-gfffile.records.concat(annotations)
-
-gff_out = File.open(output_gff, "w")
-gff_out.write(gfffile)
 gff_out.close
 
 puts "Done!"
