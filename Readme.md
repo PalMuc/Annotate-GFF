@@ -23,16 +23,38 @@ will be used. If none is set, the corresponding field will be left empty.
 ## Usage
 Annotate-GFF takes the following parameters:
 
-            --input-gff, -i <s>:   Input GFF file
-           --output-gff, -o <s>:   Output GFF file
-            --blast-xml, -b <s>:   Blast XML output
-         --species-name, -s <s>:   Species name to use if no species name is found in the hit definition
-       --annotation-xml, -a <s>:   Blast XML output for annotations
-                     --help, -h:   Show a help message
-                     
+           --input-gff, -i <s>:   Input GFF file
+          --output-gff, -o <s>:   Output GFF file
+    --blast-xml-folder, -b <s>:   Folder containing blast output files in XML
+                                  format
+        --species-name, -s <s>:   Species name to use if no species name is found
+                                  in the hit definition
+      --annotation-xml, -a <s>:   Blast XML output for annotations
+                    --help, -h:   Show this message
+     
 Of those parameters, --annotation-xml is optional. If this parameter
-is not passed no functional annotation will be added to the new GFF records.                
-                     
+is not passed no functional annotation will be added to the new GFF
+records.       
+
+## Warning
+This script will not parse the input GFF file. Rather, it will first copy
+the input GFF file to the output GFF file. Then, it will generate one
+GFF record for every HSP in the BLAST results and append those at the
+end of the output GFF file.
+This solution is necessary because the GFF files used by this program
+can be too large to fit into memory.
+
+To my knowledge, this approach will only cause problems if your GFF
+files contain sequence information using the ##FASTA notation
+described in the [GFF3
+specification](http://www.sequenceontology.org/gff3.shtml)
+After the ##FASTA line, all contents of a GFF file will be considered
+to be sequence information. If additional records are added to the end
+of the file, this will result in a malformed GFF file.
+
+The solution to this problem so far is to export sequence information
+in a separate GFF file. [Geneious](http://www.geneious.com/) supports this option.
+
 ## Walkthrough
 Let's assume you want to map EST reads of *Ephydatia muelleri* onto
 genome scaffolds of *Amphimedon queenslandica*.
@@ -55,8 +77,10 @@ sequences. You can use makeblastdb for that task:
 After that, you can produce the BLAST XML output that will be used for
 constructing GFF records:
 
-    tblastx -db ephydatia.fasta -query amphimedon.fasta -lcase_masking -evalue 0.0001 -outfmt 5 -out ephydatia.xml
+    tblastx -db ephydatia.fasta -query amphimedon.fasta -lcase_masking
+    -evalue 0.0001 -outfmt 5 -out ephydatia.xml
 
+As BLAST output, Annotate-GFF takes a folder containing XML files.
 You now have all the input files you need to run Annotate-GFF. Your
 BLAST database might contain sequences that are not named like
 Sequence\_name [Species\_name]. In this case, no species name can be
@@ -65,7 +89,7 @@ this case, you have to use the parameter -s. Make sure this name is
 identical to the one used by most sequences in your BLAST database.
 
     annotate-gff -i amphimedon.gff -o amphimedon_with_ephydatia.gff -b
-    ephydatia.xml -a ephydatia_annotations.xml -s "Ephydatia_muelleri"
+    ephydatia_blast/ -a ephydatia_annotations.xml -s "Ephydatia_muelleri"
 
 This will produce a new GFF file called amphimedon_with_ephydatia.gff
 that contains the mapping of *Ephydatia muelleri* onto the genome
